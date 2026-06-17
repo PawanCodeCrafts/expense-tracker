@@ -193,7 +193,7 @@ const editExpense = (id) => {
             
             <div class="mb-2"> 
               <label class="form-label small fw-bold mb-1">Amount</label> 
-              <input type="number" id="mAmount" class="form-control form-control-sm" value="${targetExpense.amt || ''}"> 
+              <input type="text" id="mAmount" class="form-control form-control-sm" value="${targetExpense.amt || ''}"> 
             </div>
 
             <div class="mb-2"> 
@@ -211,7 +211,7 @@ const editExpense = (id) => {
                 <option value="Others" ${targetExpense.category === 'Others' ? 'selected' : ''}>Others</option>
               </select>
             </div>
-
+             <p class='modal-errors' style="color: red; font-size: 14px;"></p>
           </div> 
           <div class="modal-footer py-2"> 
             <button type="button" class="btn btn-sm btn-secondary" onclick="closeModal()">Cancel</button> 
@@ -230,10 +230,18 @@ const saveChanges = () => {
   let mDate = document.getElementById('mDate').value; 
   let mCategory = document.getElementById('mCategory').value; 
   
-  if(!mDescription || isNaN(mAmount) || !mDate) { 
-    alert("Please enter valid details"); 
-    return; 
+  const modalErrors = document.querySelector('.modal-errors');
+  if (isNaN(mAmount)) {
+    modalErrors.textContent = "please enter valid amount";
+    return;
   } 
+  else if(!mDescription || !mAmount || !mDate) { 
+    modalErrors.textContent = "Please enter all details"; 
+    return; 
+  }
+  else {
+    modalErrors.textContent = "";
+  }
   let data = localStorage.getItem('expenses') || "[]"; 
   let expenseList = JSON.parse(data); 
   for (let i = 0; i < expenseList.length; i++) { 
