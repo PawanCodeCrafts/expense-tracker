@@ -12,6 +12,8 @@ const themeBtn = document.querySelector('#themeBtn');
 let pieChartObj = null,
     barChartObj = null,
     trendChartObj = null;
+    // store the currently edited item id 
+
 let expenses = JSON.parse(
     localStorage.getItem("expenses")
 ) || [];
@@ -127,6 +129,13 @@ class="btn btn-danger btn-sm"
 onclick="deleteExpense(${e.id})">
 Delete
 </button>
+
+<button
+class="btn btn-primary btn-sm ms-2 px-3"
+onclick="editExpense(${e.id})">
+Edit
+</button>
+
 </div>
 </li>
 `;
@@ -144,6 +153,121 @@ Delete
     createCategoryTotals();
     drawCharts();
 }
+
+// ================ edit feature start =============
+
+let currentEditBtnId = null; 
+
+const editExpense = (id) => { 
+  currentEditBtnId = id; 
+  let data = localStorage.getItem('expenses') || "[]"; 
+  const myExpenseList = JSON.parse(data); 
+  
+  let targetExpense = null; 
+  for(let i=0; i<myExpenseList.length; i++){ 
+    if(myExpenseList[i].id == id){ 
+      targetExpense = myExpenseList[i]; 
+      break; 
+    } 
+  } 
+  
+  if(!targetExpense) { 
+    console.error("Expense not found for editing"); 
+    return; 
+  } 
+
+  const modalHTML = ` 
+    <div class="modal fade show" id="bootstrapEditModal" tabindex="-1" style="display: block; background: rgba(0,0,0,0.6);" aria-modal="true" role="dialog"> 
+      <div class="modal-dialog modal-dialog-centered modal-sm"> 
+        <div class="modal-content shadow"> 
+          <div class="modal-header py-2"> 
+            <h6 class="modal-title fw-bold">Edit Item</h6> 
+            <button type="button" class="btn-close" onclick="closeModal()"></button> 
+          </div> 
+          <div class="modal-body py-2" style="font-size: 14px;"> 
+            
+            <div class="mb-2"> 
+              <label class="form-label small fw-bold mb-1">Description</label> 
+              <input type="text" id="mDescription" class="form-control form-control-sm" value="${targetExpense.desc || ''}"> 
+            </div> 
+            
+            <div class="mb-2"> 
+              <label class="form-label small fw-bold mb-1">Amount</label> 
+              <input type="text" id="mAmount" class="form-control form-control-sm" value="${targetExpense.amt || ''}"> 
+            </div>
+
+            <div class="mb-2"> 
+              <label class="form-label small fw-bold mb-1">Date</label> 
+              <input type="date" id="mDate" class="form-control form-control-sm" value="${targetExpense.date || ''}"> 
+            </div>
+
+            <div class="mb-2"> 
+              <label class="form-label small fw-bold mb-1">Category</label> 
+              <select id="mCategory" class="form-select form-select-sm">
+                <option value="Shopping" ${targetExpense.category === 'Shopping' ? 'selected' : ''}>Shopping</option>
+                <option value="Food" ${targetExpense.category === 'Food' ? 'selected' : ''}>Food</option>
+                <option value="Bills" ${targetExpense.category === 'Bills' ? 'selected' : ''}>Bills</option>
+                <option value="Travel" ${targetExpense.category === 'Travel' ? 'selected' : ''}>Travel</option>
+                <option value="Others" ${targetExpense.category === 'Others' ? 'selected' : ''}>Others</option>
+              </select>
+            </div>
+             <p class='modal-errors' style="color: red; font-size: 14px;"></p>
+          </div> 
+          <div class="modal-footer py-2"> 
+            <button type="button" class="btn btn-sm btn-secondary" onclick="closeModal()">Cancel</button> 
+            <button type="button" class="btn btn-sm btn-primary" onclick="saveChanges()">Save</button> 
+          </div> 
+        </div> 
+      </div> 
+    </div> `; 
+    
+  document.body.insertAdjacentHTML('beforeend', modalHTML); 
+}; 
+
+const saveChanges = () => { 
+  let mDescription = document.getElementById('mDescription').value.trim(); 
+  let mAmount = parseFloat(document.getElementById('mAmount').value); 
+  let mDate = document.getElementById('mDate').value; 
+  let mCategory = document.getElementById('mCategory').value; 
+  
+  const modalErrors = document.querySelector('.modal-errors');
+  if (isNaN(mAmount)) {
+    modalErrors.textContent = "please enter valid amount";
+    return;
+  } 
+  else if(!mDescription || !mAmount || !mDate) { 
+    modalErrors.textContent = "Please enter all details"; 
+    return; 
+  }
+  else {
+    modalErrors.textContent = "";
+  }
+  let data = localStorage.getItem('expenses') || "[]"; 
+  let expenseList = JSON.parse(data); 
+  for (let i = 0; i < expenseList.length; i++) { 
+    if (expenseList[i].id == currentEditBtnId) { 
+      expenseList[i].desc = mDescription; 
+      expenseList[i].amt = mAmount; 
+      expenseList[i].date = mDate; 
+      expenseList[i].category = mCategory; 
+      break; 
+    } 
+  } 
+  localStorage.setItem('expenses', JSON.stringify(expenseList)); 
+  expenses = expenseList; 
+  closeModal(); 
+  render(); 
+};
+
+function closeModal() { 
+  const modal = document.getElementById('bootstrapEditModal'); 
+  if (modal) { 
+    modal.remove(); 
+  } 
+}
+
+// ============= edit feature end =============
+
 
 window.deleteExpense = function (id) {
     expenses = expenses.filter(
